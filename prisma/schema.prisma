@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String
+  fullName      String
+  role          String    @default("STAFF")
+  permissions   String[]
+  isActive      Boolean   @default(true)
+  emailVerified Boolean   @default(false)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  subscription  Subscription?
+  clinicId      String?
+  patients      Patient[]
+  chartEntries  ChartEntry[]
+}
+
+model Patient {
+  id             String       @id @default(uuid())
+  firstName      String
+  lastName       String
+  firstNameKana  String
+  lastNameKana   String
+  dateOfBirth    DateTime
+  gender         String
+  firstVisitDate DateTime
+  phone          String?
+  email          String?
+  address        String?
+  clinicId       String
+  createdBy      String
+  updatedBy      String?
+  deletedBy      String?
+  isDeleted      Boolean      @default(false)
+  deletedAt      DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  chartEntries   ChartEntry[]
+  creator        User         @relation(fields: [createdBy], references: [id])
+}
+
+model ChartEntry {
+  id              String    @id @default(uuid())
+  patientId       String
+  date            DateTime
+  content         String
+  therapyMethods  String[]
+  nextAppointment DateTime?
+  createdBy       String
+  updatedBy       String?
+  deletedBy       String?
+  isDeleted       Boolean   @default(false)
+  deletedAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  patient         Patient   @relation(fields: [patientId], references: [id])
+  creator         User      @relation(fields: [createdBy], references: [id])
+}
+
+model EmailVerification {
+  id        String   @id @default(uuid())
+  email     String
+  token     String   @unique
+  verified  Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([token])
+}
+
+model Subscription {
+  id                  String    @id @default(uuid())
+  userId              String    @unique
+  user                User      @relation(fields: [userId], references: [id])
+  payjpCustomerId     String
+  payjpSubscriptionId String
+  plan                String
+  isYearly            Boolean   @default(false)
+  status              String    @default("active")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  nextBillingDate     DateTime?
+  canceledAt          DateTime?
+}
